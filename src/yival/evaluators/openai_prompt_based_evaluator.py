@@ -122,7 +122,7 @@ class OpenAIPromptBasedEvaluator(BaseEvaluator):
         prompt[-1]["content"] += "\n\n" + CLASSIFY_STR.format(
             choices=choices_to_string(self.config.choices)
         )
-
+        print(f"\n=================== Ask llm to evaluate quality:\n{prompt[0]['content']}\n")
         response = llm_completion(
             Request(
                 model_name=self.config.model_name,
@@ -131,7 +131,7 @@ class OpenAIPromptBasedEvaluator(BaseEvaluator):
             )
         ).output
         response_content = response['choices'][0]['message']['content']
-
+        print(f"\n=================== Got the answer:\n{response_content}\n")
         choice = extract_choice_from_response(
             response_content, self.config.choices
         )

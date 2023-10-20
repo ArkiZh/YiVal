@@ -33,12 +33,14 @@ def prompt_generation(prompt: str, style) -> str:
     logger.reset()
     openai.api_key = os.getenv("OPENAI_API_KEY")
     messages = [{"role": "user", "content": prompt}]
+    print(f"\n=============== Ask llm to write story:\n{prompt}")
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4",
         messages=messages,
         temperature=1.0,
         max_tokens=3000
     )
+    print(f"\n=============== Got the story:\n{response['choices'][0]['message']['content']}")
     res = str(
         f'Drawing style: {style}, ' +
         response['choices'][0]['message']['content'][:1000]
@@ -65,6 +67,8 @@ def get_request(messageId):
         if response_json.get('progress') == 100:
             break
     print(f"[INFO] Successfully get response from messageId: {messageId}")
+    img_urls = '\n'.join(response_json['response']['imageUrls'])
+    print(f"[INFO] Image urls:\n{img_urls}\n[INFO] All-in-one image url:\n{response_json['response']['imageUrl']}")
     return response.json()
 
 

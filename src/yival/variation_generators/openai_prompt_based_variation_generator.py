@@ -95,6 +95,7 @@ class OpenAIPromptBasedVariationGenerator(BaseVariationGenerator):
 
         while len(res) < self.config.number_of_variations:
             messages = self.prepare_messages(res_content)
+            print(f"\n=============== Ask llm to generate instructions:\n{messages[0]['content']}")
             if not self.config.diversify:
                 with tqdm(
                     total=self.config.number_of_variations - len(res),
@@ -125,6 +126,8 @@ class OpenAIPromptBasedVariationGenerator(BaseVariationGenerator):
                             ["content"].strip("'").strip('"')
                         )
                         res.append(variation)
+                        content = r["choices"][0]["message"]["content"]
+                        print(f"\n=============== Got instruction {len(res)}:\n{content}\n")
             else:
                 with tqdm(
                     total=self.config.number_of_variations,
