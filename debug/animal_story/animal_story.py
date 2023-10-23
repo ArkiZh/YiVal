@@ -1,3 +1,4 @@
+import secret
 
 
 if __name__ == '__main__':
