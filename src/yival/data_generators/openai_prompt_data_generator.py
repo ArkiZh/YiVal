@@ -180,6 +180,7 @@ class OpenAIPromptDataGenerator(BaseDataGenerator):
 
         while len(all_data) < self.config.number_of_examples:
             messages = self.prepare_messages(all_data_content)
+            print(f"================== Ask llm to generate dataset {len(all_data)}:\n{messages[0]['content']}")
             if not self.config.diversify:
                 message_batches = [
                     messages
@@ -198,8 +199,10 @@ class OpenAIPromptDataGenerator(BaseDataGenerator):
                         )
                     )
                 for r in responses:
+                    content = r["choices"][0]["message"]["content"]
+                    print(f"================= Got data: \n{content}\n")
                     self.process_output(
-                        r["choices"][0]["message"]["content"], all_data, chunk
+                        content, all_data, chunk
                     )
             else:
                 with tqdm(
@@ -218,12 +221,14 @@ class OpenAIPromptDataGenerator(BaseDataGenerator):
                     self.process_output(
                         output.choices[0].message.content, all_data, chunk
                     )
+                    print(f"================= Got data: \n{output.choices[0].message.content}\n")
                     c = extract_dict_from_gpt_output(
                         output.choices[0].message.content
                     )
                     if c:
                         all_data_content.append(c)
                     pbar.update(1)
+
             if chunk and len(chunk) >= self.config.chunk_size:
                 yield chunk
                 chunk = []

@@ -175,6 +175,7 @@ class OptimizeByPromptImprover(BaseCombinationImprover):
         
         make sure llm response format is valid and return new varations
         """
+        print(f"========== Ask llm to improve the prompt:\n{prompt}\n")
         response = llm_completion(
             Request(
                 model_name=self.config.model_name,
@@ -182,10 +183,9 @@ class OptimizeByPromptImprover(BaseCombinationImprover):
                 params={"temperature": 1.0}
             )
         ).output
-
-        llm_output_str = response["choices"][0]["message"]["content"].strip(
-            "'"
-        ).strip('"')  #type: ignore
+        content = response["choices"][0]["message"]["content"]
+        print(f"========== Got the solution:\n{content}\n")
+        llm_output_str = response["choices"][0]["message"]["content"].strip("'").strip('"')  #type: ignore
 
         variations = scratch_variations_from_str(
             llm_output_str, self.config.improve_var

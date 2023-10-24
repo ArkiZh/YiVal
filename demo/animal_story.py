@@ -40,9 +40,9 @@ def prompt_generation(prompt: str, style) -> str:
         temperature=1.0,
         max_tokens=3000
     )
-    print(f"\n=============== Got the story:\n{response['choices'][0]['message']['content']}")
+    print(f"\n=============== Got the story:\n{response['choices'][0]['message']['content']}\n")
     res = str(
-        f'Drawing style: {style}, ' +
+        f'Drawing style: {style}. \nStory:\n' +
         response['choices'][0]['message']['content'][:1000]
     )
     token_usage = response['usage']['total_tokens']
@@ -95,7 +95,7 @@ def load_image(response):
 
 
 def image_generation(
-    species, character, drawing_style, state: ExperimentState
+    animal_species, animal_character, drawing_style, state: ExperimentState
 ):
     payload = json.dumps({
         "msg":
@@ -105,8 +105,8 @@ def image_generation(
                     "Draw a picture of a",
                     name="task",
                     variables={
-                        "animal_species": species,
-                        "animal_character": character,
+                        "animal_species": animal_species,
+                        "animal_character": animal_character,
                     },
                     state=state
                 )

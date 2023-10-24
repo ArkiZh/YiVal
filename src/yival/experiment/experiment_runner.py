@@ -115,7 +115,7 @@ class ExperimentRunner:
             with tqdm(
                 total=total_combinations, desc="Processing", unit="item"
             ) as pbar:
-                with ThreadPoolExecutor() as executor:
+                with ThreadPoolExecutor(max_workers=8) as executor:
                     for res in executor.map(
                         self.parallel_task, data,
                         [all_combinations] * len(data), [logger] * len(data),

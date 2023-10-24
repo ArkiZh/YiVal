@@ -1,0 +1,117 @@
+custom_function: debug.copywriting.copywritting.write
+description: Generated experiment config
+dataset:
+  data_generators:
+    openai_prompt_data_generator:
+      chunk_size: 1000
+      diversify: true
+      prompt: |-
+        Please provide a concrete and realistic test case as a dictionary for function invocation using the ** operator.
+        Only include parameters, excluding description and name.
+        Ensure it's succinct and well-structured.
+        只输出dict，别的什么都不要
+      input_function:
+        description: 根据餐馆名称(restaurant)、餐馆风格(style)、主打菜品(dishes)、目标客户来(customers)生成推广文案,只接受简体中文参数
+        name: copywriting_generation
+        parameters:
+          restaurant: str
+          style: str
+          dishes: str
+          customers: str
+      number_of_examples: 2
+      model_name: gpt-4
+  source_type: machine_generated
+
+variations:
+  - name: task
+    generator_name: openai_prompt_based_variation_generator
+    generator_config:
+      model_name: gpt-4
+      number_of_variations: 2
+      diversify: false
+      max_tokens: 2000
+      variables: null
+      prompt:
+        - content: |-
+            你的目标是生成用于gpt4的instruction,这个instruction会被用来向gpt4提问,以生成prompt.
+            这个prompt要让gpt4扮演一个美食探店博主，这类博主主要是去餐馆探店，然后把探店经历写成小红书风格的文案，发到小红书上给这家餐馆做推广引流。
+            现在你要生成的instruction作用是让gpt4根据餐馆的名称、风格和主打食物来写这类文案。
+            
+            需要注意的事项:
+            - 回答中需要包含一个吸引人的标题
+            - 字数限制200字
+            - {restaurant} 表示要探店的餐馆名称
+            - {style} 表示餐馆的主打风格
+            - {dishes} 表示需要推广的菜品
+            - {customers} 表示这次推广的受众
+            
+            只输出instruction，没有任何无关的内容。
+          role: system
+
+evaluators:
+  - evaluator_type: individual
+    metric_calculators:
+      - method: AVERAGE
+    name: openai_prompt_based_evaluator
+    display_name: copywriting_quality
+    prompt: |-
+      You are assessing a submitted story based on a given task based on a criterion. Here is the data:
+      - Task: 根据餐馆名称(restaurant)、餐馆风格(style)、主打菜品(dishes)、目标客户来(customers)生成推广文案.
+      - 需要你来根据input(即输入)和result(即生成的文案)对文案进行评价
+      [Input]: restaurant : {restaurant}, style: {style}, dishes: {dishes}, customers: {customers}
+      [Result]: {raw_output}
+      Answer the question by selecting one of the following options:
+      A. 文案基本完成，但缺乏吸引力，内容质量一般，没有明确针对目标受众，语言风格平淡，缺乏创新性和独特性。
+      B. 文案具有一定的吸引力，内容质量尚可，部分针对目标受众，语言风格尚可，有一定的创新性和独特性。
+      C. 文案具有较好的吸引力，内容质量较好，较好地针对目标受众，语言风格较轻快活泼，有较好的创新性和独特性。
+      D. 文案非常吸引人，内容质量非常好，非常好地针对目标受众，语言风格非常轻快活泼，有非常好的创新性和独特性。
+      E. 文案极其吸引人，内容质量极好，完美地针对目标受众，语言风格极其轻快活泼，有极高的创新性和独特性，是一篇无可挑剔的文案。
+    choices: ["A", "B", "C", "D", "E"]
+    model_name: gpt-4
+    description: "evaluate the quality of the generated story"
+    scale_description: "0-4"
+    choice_scores:
+      A: 0
+      B: 1
+      C: 2
+      D: 3
+      E: 4
+
+human_rating_configs:
+  - name: relevance
+    instructions: 生成的文案与输入的相关性.
+    scale: [1, 5]
+
+  - name: 新颖性
+    instructions: 生成的文案新颖吗
+    scale: [1, 5]
+
+
+selection_strategy:
+  ahp_selection:
+    criteria:
+      - "openai_prompt_based_evaluator: copywriting_quality"
+      - average_token_usage
+      - average_latency
+    criteria_maximization:
+      "openai_prompt_based_evaluator: copywriting_quality": true
+      average_latency: false
+      average_token_usage: false
+    criteria_weights:
+      "openai_prompt_based_evaluator: copywriting_quality": 1
+      average_latency: 0.0
+      average_token_usage: 0.0
+    normalize_func: "z-score"
+
+improver:
+  name: "optimize_by_prompt_improver"
+  model_name: "gpt-4"
+  max_iterations: 2
+  improve_var: ["task"]
+  head_meta_instruction: |-
+    Now you will help me generate a prompt which is used to
+    根据餐馆名称(restaurant)、餐馆风格(style)、主打菜品(dishes)、目标客户来(customers)生成推广文案. 
+    I already have some prompt and its evaluation results :
+
+  end_meta_instruction: |
+    Give me a new prompt that is different from all pairs above, and has a evaluation value higher than any of above.
